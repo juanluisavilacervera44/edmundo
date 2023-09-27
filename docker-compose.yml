@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+    server:
+        build: docker/nginx
+        restart: on-failure
+        volumes:
+            - ./:/var/www/edmundo
+        ports:
+            - "80:80"
+        networks:
+            edmundo:
+                aliases:
+                    - edmundo.local
+                    - api.edmundo.local
+
+    edmundo:
+        build:
+            context: docker/php-fpm
+        environment:
+            - XDEBUG_REMOTE_HOST=172.18.0.1
+            - XDEBUG_REMOTE_PORT=9999
+        ports:
+            - "8000:8000"
+        volumes:
+            - ./:/var/www/edmundo
+        networks:
+            - edmundo
+
+    db:
+        image: "postgres:9.6"
+        environment:
+            - TZ=Europe/London
+            - PGTZ=Europe/London
+            - POSTGRES_USER=user
+            - POSTGRES_PASSWORD=password
+        ports:
+            - "5432:5432"
+        networks:
+            - edmundo
+
+networks:
+    edmundo:
+        driver: bridge
